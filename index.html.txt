@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة تقن 221 - أ/ رجاء خليل</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+
+        :root {
+            --soft-pink: #ffafcc;
+            --deep-pink: #fb6f92;
+            --light-purple: #cdb4db;
+            --main-purple: #a2d2ff;
+            --bg-color: #fcf6f9;
+            --white: #ffffff;
+            --text-dark: #4a4a4a;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(251, 111, 146, 0.15);
+            width: 90%;
+            max-width: 700px;
+            text-align: center;
+            border: 2px solid var(--soft-pink);
+        }
+
+        .header-box {
+            background: linear-gradient(135deg, var(--soft-pink), var(--light-purple));
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+
+        .hidden { display: none; }
+
+        input {
+            width: 85%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid var(--light-purple);
+            border-radius: 10px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        button {
+            background: var(--deep-pink);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        button:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+
+        .option-btn {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            text-align: right;
+            background: #fff;
+            color: var(--text-dark);
+            border: 2px solid var(--soft-pink);
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .option-btn:hover { background: #ffe5ec; }
+
+        .feedback {
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .correct { background: #d4edda; color: #155724; }
+        .wrong { background: #f8d7da; color: #721c24; }
+
+        #certificate {
+            border: 10px double var(--soft-pink);
+            padding: 30px;
+            margin-top: 20px;
+            background: white;
+            color: #333;
+        }
+
+        .timer-bar { color: var(--deep-pink); font-weight: bold; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="start-screen">
+        <div class="header-box">
+            <h2>إعداد الأستاذة: رجاء خليل</h2>
+            <h3>قسم الحاسوب | مقرر تقن 221</h3>
+        </div>
+        <p>أهلاً بكِ في مسابقة "الرياضيات والبرمجة" 🌸</p>
+        <input type="text" id="student-name" placeholder="اسمكِ الثلاثي"><br>
+        <input type="text" id="student-class" placeholder="الصف"><br>
+        <button onclick="startGame()">ابدئي اللعب ✨</button>
+    </div>
+
+    <div id="quiz-screen" class="hidden">
+        <div class="timer-bar">⏱️ الوقت: <span id="time-elapsed">0</span> ثانية | السؤال <span id="q-num">1</span>/30</div>
+        <h3 id="question-text"></h3>
+        <div id="options-container"></div>
+        <div id="instant-feedback" class="feedback hidden"></div>
+        <button id="next-btn" class="hidden" onclick="loadQuestion()">السؤال التالي ⮕</button>
+    </div>
+
+    <div id="result-screen" class="hidden">
+        <h2 style="color: var(--deep-pink);">أحسنتِ يا بطلة! 🎀</h2>
+        <p id="final-stats"></p>
+        
+        <div id="certificate">
+            <h1 style="color: var(--deep-pink);">شهادة إنجاز</h1>
+            <p>تهدي الأستاذة <b>رجاء خليل</b> هذه الشهادة للطالبة:</p>
+            <h2 id="cert-name" style="color: var(--light-purple);"></h2>
+            <p>من الصف: <b id="cert-class"></b></p>
+            <p>لاجتيازها مسابقة مقرر <b>تقن 221</b> بنجاح.</p>
+            <hr style="border: 1px dashed var(--soft-pink);">
+            <p>مع تمنياتي لكِ بالتوفيق الدائم</p>
+        </div>
+        <br>
+        <button onclick="window.print()">تحميل أو طباعة الشهادة 📄</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { q: "ما العلم الذي يعتبر أساس علوم الحاسوب؟", options: ["الرياضيات", "الكيمياء", "الأحياء", "الجغرافيا"], correct: 0 },
+        { q: "أي لغة برمجية هي الأنسب لحل المسائل الرياضية المعقدة؟", options: ["Java", "C++", "Python", "Swift"], correct: 2 },
+        { q: "ما هي المكتبة المخصصة للعمليات الحسابية الرمزية (التفاضل والتكامل)؟", options: ["Math", "SymPy", "NumPy", "Time"], correct: 1 },
+        { q: "أي مكتبة توفر المصفوفات (Arrays) وتجري عمليات سريعة عليها؟", options: ["Pandas", "NumPy", "Random", "Datetime"], correct: 1 },
+        { q: "تستخدم مكتبة Matplotlib في بايثون من أجل:", options: ["كتابة النصوص", "الرسوم البيانية", "تشفير البيانات", "إصلاح الأخطاء"], correct: 1 },
+        { q: "الأمر المستخدم لتثبيت مكتبة خارجية عبر بايثون هو:", options: ["get install", "python load", "pip install", "add library"], correct: 2 },
+        { q: "ما هي المكتبة المضمنة التي تتعامل مع التواريخ؟", options: ["Time", "Date", "Datetime", "Calendar"], correct: 2 },
+        { q: "للحصول على الجذر التربيعي نستخدم دالة sqrt من مكتبة:", options: ["Random", "Math", "OS", "Sys"], correct: 1 },
+        { q: "أي رمز يستخدم لعرض اسم الشهر كاملاً (مثل January)؟", options: ["%m", "%b", "%B", "%d"], correct: 2 },
+        { q: "تستخدم دالة factorial لحساب:", options: ["الجذر", "القيمة المطلقة", "مضروب العدد", "الأس"], correct: 2 },
+        { q: "تعتبر الخوارزميات مجموعة من الخطوات المنطقية لـ:", options: ["تصغير الشاشة", "حل مشكلة", "زيادة السرعة", "تغيير الألوان"], correct: 1 },
+        { q: "القسمة التي نتيجتها عدد صحيح (//) تسمى:", options: ["القسمة العشرية", "القسمة الصحيحة", "باقي القسمة", "الأس"], correct: 1 },
+        { q: "ناتج math.sqrt(25) هو:", options: ["5", "10", "25", "12"], correct: 0 },
+        { q: "أي مكتبة تستخدم لمعالجة الصور؟", options: ["NumPy", "Pillow", "Math", "SymPy"], correct: 1 },
+        { q: "ما وظيفة الدالة abs()؟", options: ["الجذر", "الأس", "القيمة المطلقة", "المجموع"], correct: 2 },
+        { q: "للحصول على قائمة المكتبات المثبتة نستخدم الأمر:", options: ["pip list", "pip show", "pip get", "pip run"], correct: 0 },
+        { q: "الرمز %Y في تنسيق التاريخ يعرض السنة بـ:", options: ["رقمين", "4 أرقام", "اسم السنة", "اليوم"], correct: 1 },
+        { q: "أي مكتبة تستخدم لتوليد أرقام عشوائية؟", options: ["Math", "Random", "Time", "NumPy"], correct: 1 },
+        { q: "ما هو الرمز المستخدم لحساب باقي القسمة؟", options: ["*", "/", "%", "//"], correct: 2 },
+        { q: "أي مما يلي مكتبة خارجية (ليست مضمنة)؟", options: ["Math", "Random", "Pandas", "Datetime"], correct: 2 },
+        { q: "وظيفة مكتبة Pandas الأساسية هي:", options: ["تحليل البيانات", "رسم الدوائر", "الأمن السيبراني", "الترجمة"], correct: 0 },
+        { q: "لإعطاء اسم مستعار للمكتبة نستخدم كلمة:", options: ["import", "as", "from", "in"], correct: 1 },
+        { q: "ناتج 2 ** 3 في بايثون هو:", options: ["5", "6", "8", "9"], correct: 2 },
+        { q: "ما هي الدالة التي تعطي أصغر قيمة في القائمة؟", options: ["max()", "min()", "sum()", "low()"], correct: 1 },
+        { q: "أي أمر نستخدمه لتحديث مكتبة؟", options: ["pip update", "pip install --upgrade", "pip fix", "pip renew"], correct: 1 },
+        { q: "لتعريف دالة برمجية نستخدم الكلمة المحجوزة:", options: ["function", "def", "func", "start"], correct: 1 },
+        { q: "أي مكتبة تساعد في رسم المعادلات الرياضية المعقدة؟", options: ["Matplotlib", "OS", "Datetime", "Random"], correct: 0 },
+        { q: "الرمز %A في strftime يعرض:", options: ["رقم اليوم", "اسم اليوم كاملاً", "اسم الشهر", "السنة"], correct: 1 },
+        { q: "تستخدم لغة بايثون في الذكاء الاصطناعي بسبب:", options: ["صعوبتها", "كثرة مكتباتها", "أنها قديمة", "لا تستخدم"], correct: 1 },
+        { q: "ما هو ناتج math.pow(2, 2)؟", options: ["2", "4", "8", "16"], correct: 1 }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+    let startTime;
+    let timer;
+
+    function startGame() {
+        const name = document.getElementById('student-name').value;
+        const sClass = document.getElementById('student-class').value;
+        if(!name || !sClass) return alert("يرجى إدخال اسمكِ وصفكِ أولاً 🌸");
+
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        startTime = Date.now();
+        timer = setInterval(() => {
+            document.getElementById('time-elapsed').innerText = Math.floor((Date.now() - startTime) / 1000);
+        }, 1000);
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if(currentQ >= questions.length) return showResults();
+        
+        document.getElementById('q-num').innerText = currentQ + 1;
+        const qData = questions[currentQ];
+        document.getElementById('question-text').innerText = qData.q;
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        document.getElementById('instant-feedback').classList.add('hidden');
+        document.getElementById('next-btn').classList.add('hidden');
+
+        qData.options.forEach((opt, idx) => {
+            const b = document.createElement('button');
+            b.innerText = opt;
+            b.className = 'option-btn';
+            b.onclick = () => check(idx);
+            container.appendChild(b);
+        });
+    }
+
+    function check(idx) {
+        const q = questions[currentQ];
+        const feedback = document.getElementById('instant-feedback');
+        feedback.classList.remove('hidden');
+        document.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+
+        if(idx === q.correct) {
+            score++;
+            feedback.innerText = "أحسنتِ! إجابة صحيحة ✅";
+            feedback.className = "feedback correct";
+        } else {
+            feedback.innerText = "إجابة خاطئة ❌ الإجابة هي: " + q.options[q.correct];
+            feedback.className = "feedback wrong";
+        }
+        currentQ++;
+        document.getElementById('next-btn').classList.remove('hidden');
+    }
+
+    function showResults() {
+        clearInterval(timer);
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('final-stats').innerText = `نقاطك: ${score} من 30 | الوقت: ${document.getElementById('time-elapsed').innerText} ثانية`;
+        document.getElementById('cert-name').innerText = document.getElementById('student-name').value;
+        document.getElementById('cert-class').innerText = document.getElementById('student-class').value;
+    }
+</script>
+</body>
+</html>
